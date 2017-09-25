@@ -1,7 +1,11 @@
 module Kajian
+  KesalahanDaerah = Class.new(StandardError)
+
   module Makro
+    require 'kajian/fungsi_bantu'
     require 'open-uri'
     require 'nokogiri'
+    require 'json'
 
     KOLOM = %i[tema penceramah tempat tanggal waktu gambar]
     BULAN = {
@@ -17,12 +21,14 @@ module Kajian
       "desember" => "december",
     }
 
-    @@sumber       = []
-    @@waktu_simpan = Time.now - 3600
+    extend FungsiBantu
+
+    @@sumber = []
 
     class << self
       def extended(sumber)
         @@sumber << sumber
+        sumber.nama = sumber_ke_simbol(sumber)
       end
 
       def sumber
@@ -30,19 +36,46 @@ module Kajian
       end
     end
 
-    attr_accessor *KOLOM.map {|k| "proc_#{k}"}
-    attr_reader :url, :direktori_kota, *KOLOM
-    attr_writer :proc_blok
+    attr_accessor :direktori_master, :direktori_salinan, *KOLOM.map {|k| "proc_#{k}"}
+    attr_reader   :url, *KOLOM
+    attr_writer   :proc_blok, :nama
 
-    def dokumen
-      @@durasi_simpan = 10
-      if @dokumen.nil? or perlu_diperbarui?
-        @dokumen       = direktori_kota.map do |kota, dir|
-                           [kota, @proc_blok.(kota)]
-                         end.to_h
-        @@waktu_simpan = Time.now
+    def dokumen *daerah_daerah
+      @buang_direktori ||= []
+      set_direktori!
+      if daerah_daerah.empty?
+        @buang_direktori.each {|daerah| direktori_salinan.delete(daerah)}
+
+        direktori_salinan.map do |daerah, dir|
+          [daerah, @proc_blok.(daerah)] #rescue [daerah, []]
+        end.to_h
+      else
+        daerah_daerah = daerah_daerah.map(&:to_sym)
+        raise Kajian::KesalahanDaerah, "daerah tidak ditemukan" \
+          if daerah_daerah - direktori_salinan.keys == daerah_daerah
+        pakai_direktori(*daerah_daerah)
+        dokumen
       end
-      @dokumen
+    end
+
+    def set_direktori!
+      json_file = File.join('lib', 'kajian', 'sumber', "#{@nama}.json")
+      if File.exists?(json_file)
+        self.direktori_master ||= JSON(File.read(json_file), symbolize_names: true)
+        self.direktori_salinan = direktori_master.dup
+      end
+    end
+
+    def buang_direktori(*args)
+      set_direktori!
+      @pakai_direktori = direktori_master.keys - args.map(&:to_sym)
+      @buang_direktori = args
+    end
+
+    def pakai_direktori(*args)
+      set_direktori!
+      @buang_direktori = direktori_master.keys - args.map(&:to_sym)
+      @pakai_direktori = args.map(&:to_sym)
     end
 
     def blok(filter_blok)
@@ -52,13 +85,13 @@ module Kajian
                 filter_blok
               end
 
-      self.proc_blok = proc do |kota|
-        if instance_variable_get("@laman_#{kota}").nil? or perlu_diperbarui?
-          laman = Nokogiri::HTML(open(File.join(self.url, self.direktori_kota[kota])))
-          instance_variable_set("@laman_#{kota}", laman)
+      @proc_blok = proc do |daerah|
+        if instance_variable_get("@laman_#{daerah}").nil?
+          laman = Nokogiri::HTML(open(File.join(self.url, self.direktori_salinan[daerah])))
+          instance_variable_set("@laman_#{daerah}", laman)
         end
 
-        laman ||= instance_variable_get("@laman_#{kota}")
+        laman ||= instance_variable_get("@laman_#{daerah}")
 
         if @blok.kind_of? Proc
           @blok.(laman)
@@ -104,31 +137,28 @@ module Kajian
       end
     end
 
-    def bersihkan(teks, harus_hilang, nama_kolom)
-      if harus_hilang
-        teks.gsub(harus_hilang, '')
-      elsif nama_kolom == :penceramah
-        teks.sub(/^(((A|a)l(\-?|\s+))?(U|u)stadz) /, '')
-      elsif nama_kolom == :tanggal
-        BULAN.each do |asal_kata, terjemahan|
-          teks.sub!(asal_kata, terjemahan)
+    private
+      def bersihkan(teks, harus_hilang, nama_kolom)
+        if harus_hilang
+          teks.gsub(harus_hilang, '')
+        elsif nama_kolom == :penceramah
+          teks.sub(/^(((A|a)l(\-?|\s+))?(U|u)stadz) /, '')
+        elsif nama_kolom == :tanggal
+          BULAN.each do |asal_kata, terjemahan|
+            teks.sub!(asal_kata, terjemahan)
+          end
+          teks
+        else
+          teks
         end
-        teks
-      else
-        teks
       end
-    end
 
-    def substitusi(teks, sub_hash)
-      sub_hash ? teks.gsub(*sub_hash.to_a.first) : teks
-    end
+      def substitusi(teks, sub_hash)
+        sub_hash ? teks.gsub(*sub_hash.to_a.first) : teks
+      end
 
-    def konversi(teks, parser)
-      parser ? parser.parse(teks) : teks
-    end
-
-    def perlu_diperbarui?
-      Time.now > @@waktu_simpan + @@durasi_simpan
-    end
+      def konversi(teks, parser)
+        parser ? parser.parse(teks) : teks
+      end
   end
 end
