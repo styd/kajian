@@ -101,7 +101,7 @@ module Kajian
           kajian = {}
           KOLOM.each do |k|
             konten    = self.public_send("proc_#{k}").(b) rescue nil
-            kajian[k] = konten.kind_of?(Array) ? konten.first : konten
+            kajian[k] = konten.kind_of?(Array) ? (k == :penceramah ? konten : konten.first) : konten
           end
           kajian
         end
@@ -124,13 +124,26 @@ module Kajian
                    teks_awal = if instance_variable_get("@#{k}").kind_of? Proc
                                  instance_variable_get("@#{k}").(blok)
                                elsif nilai_k
-                                 blok.public_send(*nilai_k.to_a.first)
-                                     .map(&:text).first
+                                 konten = blok.public_send(*nilai_k.to_a.first)
+                                 konten = if k == :gambar
+                                            konten.map {|img| img["src"]}
+                                          else
+                                            konten.map(&:text)
+                                          end
+                                 k == :penceramah ? konten : konten.first
                                end
 
-                   teks_bersih = bersihkan(teks_awal, filter[:hilangkan], k)
-                   teks_sub    = substitusi(teks_bersih, filter[:substitusi])
-                   konversi(teks_sub, filter[:parser])
+                   if k == :penceramah
+                     teks_awal.map do |teks|
+                       teks_bersih = bersihkan(teks, filter[:hilangkan], k)
+                       teks_sub    = substitusi(teks_bersih, filter[:substitusi])
+                       konversi(teks_sub, filter[:parser])
+                     end
+                   else
+                     teks_bersih = bersihkan(teks_awal, filter[:hilangkan], k)
+                     teks_sub    = substitusi(teks_bersih, filter[:substitusi])
+                     konversi(teks_sub, filter[:parser])
+                   end
                  end
 
         self.public_send("proc_#{k}=", proc_k)
@@ -139,10 +152,11 @@ module Kajian
 
     private
       def bersihkan(teks, harus_hilang, nama_kolom)
-        if harus_hilang
-          teks.gsub(harus_hilang, '')
+        teks.gsub!(harus_hilang, '') if harus_hilang
+        if nama_kolom == :tema
+          teks.sub(/\s+((B|b)ersama (Usta(d)?(z)?(ah)?)? .*)?$/, '')
         elsif nama_kolom == :penceramah
-          teks.sub(/^(((A|a)l(\-?|\s+))?(U|u)stadz) /, '')
+          teks.sub(/^(((A|a)l(\-?|\s+))?(U|u)stad?z?(ah)?)\s+/, '')
         elsif nama_kolom == :tanggal
           BULAN.each do |asal_kata, terjemahan|
             teks.sub!(asal_kata, terjemahan)

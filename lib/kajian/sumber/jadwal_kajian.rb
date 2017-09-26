@@ -33,7 +33,7 @@ module Kajian
 
       tanggal parser: Date do |blok|
         "#{blok.css('span.evcal_cblock .evo_date span.start').first.text.to_i} " +
-          "#{blok.css('span.evcal_cblock').first.attributes["data-smon"].value}"
+          "#{blok.css('span.evcal_cblock').first["data-smon"]}"
       end
 
       waktu(css: 'div.evo_time p', hilangkan: /^\(.*\)\s+/)
