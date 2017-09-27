@@ -1,30 +1,30 @@
 require "kajian/version"
 require "kajian/fungsi_bantu"
 require "kajian/makro"
-require "kajian/koleksi_sumber"
-require "kajian/sumber"
-require "kajian/sumber/jadwal_kajian"
+require "kajian/koleksi_adapter"
+require "kajian/adapter"
+require "kajian/adapter/jadwal_kajian"
 
 module Kajian
-  TidakAdaSumber = Class.new(StandardError)
+  TidakAdaAdapter = Class.new(StandardError)
 
   class << self
-    def sumber
-      @@sumber ||= Kajian::Makro.sumber
+    def adapter
+      @@adapter ||= Kajian::Makro.adapter
     end
 
     def lihat *sumber_sumber
       sumber_sumber = [:semua] if sumber_sumber.empty?
       if sumber_sumber.length == 1
         if sumber_sumber.first == :semua
-          raise TidakAdaSumber unless Kajian.sumber
-          Kajian::KoleksiSumber.new(Kajian.sumber)
+          raise TidakAdaAdapter unless Kajian.adapter
+          Kajian::KoleksiAdapter.new(Kajian.adapter)
         else
           s = sumber_sumber.first
-          Kajian::Sumber.new(s)
+          Kajian::Adapter.new(s)
         end
       else
-        Kajian::KoleksiSumber.new(sumber_sumber)
+        Kajian::KoleksiAdapter.new(sumber_sumber)
       end
     end
   end

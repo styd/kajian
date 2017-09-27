@@ -1,7 +1,7 @@
 require 'kajian/makro'
 
 module Kajian
-  class Sumber
+  class Adapter
     class JadwalKajian
       extend Kajian::Makro
 

@@ -1,15 +1,15 @@
 require 'kajian/fungsi_bantu'
 
 module Kajian
-  class Sumber
+  class Adapter
     include FungsiBantu
 
     def initialize(sumber)
       if sumber.kind_of?(Class)
         @kelas_sumber = sumber
-        @simbol_sumber = sumber_ke_simbol(sumber)
-      elsif sumber.kind_of? String or sumber.kind_of? Symbol
-        @kelas_sumber = simbol_ke_sumber(sumber)
+        @simbol_sumber = adapter_ke_simbol(sumber)
+      elsif sumber.kind_of?(String) or sumber.kind_of?(Symbol)
+        @kelas_sumber = simbol_ke_adapter(sumber)
         @simbol_sumber = sumber.to_sym
       end
     end

@@ -23,22 +23,22 @@ module Kajian
 
     extend FungsiBantu
 
-    @@sumber = []
+    @@adapter = []
 
     class << self
-      def extended(sumber)
-        @@sumber << sumber
-        sumber.nama = sumber_ke_simbol(sumber)
+      def extended(adapter)
+        @@adapter << adapter
+        adapter.simbol = adapter_ke_simbol(adapter)
       end
 
-      def sumber
-        @@sumber
+      def adapter
+        @@adapter
       end
     end
 
     attr_accessor :direktori_master, :direktori_salinan, *KOLOM.map {|k| "proc_#{k}"}
     attr_reader   :url, *KOLOM
-    attr_writer   :proc_blok, :nama
+    attr_writer   :proc_blok, :simbol
 
     def dokumen *daerah_daerah
       @buang_direktori ||= []
@@ -59,7 +59,7 @@ module Kajian
     end
 
     def set_direktori!
-      json_file = File.join('lib', 'kajian', 'sumber', "#{@nama}.json")
+      json_file = File.join('lib', 'kajian', 'adapter', "#{@simbol}.json")
       if File.exists?(json_file)
         self.direktori_master ||= JSON(File.read(json_file), symbolize_names: true)
         self.direktori_salinan = direktori_master.dup

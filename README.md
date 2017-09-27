@@ -1,41 +1,94 @@
 # Kajian
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/kajian`. To experiment with that code, run `bin/console` for an interactive prompt.
+Pustaka ruby untuk mengekstrak data acara kajian Islam dari berbagai situs di
+Indonesia. Dengan menggunakan DSL (Domain Specific Language), mudah untuk
+membuat adapter untuk situs-situs lain yang akan diekstrak data acara kajiannya.
 
-TODO: Delete this and the text above, and describe your gem
+Gem ini mengikutsertakan sebuah adapter untuk situs
+[jadwal kajian](http://jadwalkajian.com) dengan simbol adapter `:jadwal_kajian`.
 
-## Installation
 
-Add this line to your application's Gemfile:
+## Pemasangan
+
+Tambahkan baris berikut ini pada Gemfile Anda:
 
 ```ruby
 gem 'kajian'
 ```
 
-And then execute:
+Lalu jalankan:
 
     $ bundle
 
-Or install it yourself as:
+Atau Anda pasang sendiri seperti ini:
 
     $ gem install kajian
 
-## Usage
 
-TODO: Write usage instructions here
+## Penggunaan
 
-## Development
+Jangan lupa `require` sebelum melihat kajian.
 
-After checking out the repo, run `bin/setup` to install dependencies. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
-
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
-
-## Contributing
-
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/kajian. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+```ruby
+require 'kajian'
+```
 
 
-## License
+Lihat semua kajian
 
-The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
+```ruby
+Kajian.lihat(:semua).semua
+```
 
+
+Lihat semua kajian untuk daerah/kota "Bekasi"
+
+```ruby
+Kajian.lihat(:semua).bekasi
+```
+
+
+Lihat semua kajian yang dipublikasikan melalui situs jadwal kajian
+
+```ruby
+Kajian.lihat(:jadwal_kajian).semua
+```
+
+
+Lihat semua kajian yang dipublikasikan melalui situs jadwal kajian
+daerah/kota "Tangerang"
+
+```ruby
+Kajian.lihat(:jadwal_kajian).tangerang
+```
+
+
+Tambah adapter lain, contoh [Kajian Muslim](https://kajianmuslim.com)
+
+```ruby
+require 'kajian/adapter/kajian_muslim'
+
+Kajian.lihat(:kajian_muslim).malang
+
+Kajian.lihat(:jadwal_kajian, :kajian_muslim).jakarta
+
+Kajian.lihat(:semua).bandung
+```
+
+
+## TODO
+
+  * Dokumentasi cara membuat adapter kajian dengan menggunakan DSL Kajian
+  * Pencarian isi kolom yang efisien.
+  * Sortir berdasarkan kolom.
+  * Pengecualian adapter.
+
+
+## Kontribusi
+
+Laporan _bug_ dan _pull request_ dapat diajukan melalui Github https://github.com/styd/kajian.
+
+
+## Lisensi
+
+Gem ini tersedia sebagai _open source_ sesuai ketentuan [MIT License](http://opensource.org/licenses/MIT).
