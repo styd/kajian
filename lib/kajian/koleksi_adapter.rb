@@ -7,15 +7,19 @@ module Kajian
     end
 
     def semua
+      koleksi = {}
       @adapter_adapter.map do |adapter|
-        Kajian::Adapter.new(adapter).semua
+        koleksi = koleksi.merge(Kajian::Adapter.new(adapter).semua)
       end
+      koleksi
     end
 
     def [](daerah)
+      koleksi = {}
       @adapter_adapter.map do |adapter|
-        Kajian::Adapter.new(adapter).public_send(daerah)
+        koleksi = koleksi.merge(Kajian::Adapter.new(adapter).public_send(daerah))
       end
+      koleksi
     end
 
     def method_missing(m)

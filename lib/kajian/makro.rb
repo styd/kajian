@@ -36,9 +36,10 @@ module Kajian
       end
     end
 
-    attr_accessor :direktori_master, :direktori_salinan, *KOLOM.map {|k| "proc_#{k}"}
+    attr_accessor :simbol, :direktori_master, :direktori_salinan,
+                  *KOLOM.map {|k| "proc_#{k}"}
     attr_reader   :url, *KOLOM
-    attr_writer   :proc_blok, :simbol
+    attr_writer   :proc_blok,
 
     def dokumen *daerah_daerah
       @buang_direktori ||= []
@@ -59,7 +60,7 @@ module Kajian
     end
 
     def set_direktori!
-      json_file = File.join('lib', 'kajian', 'adapter', "#{@simbol}.json")
+      json_file = File.join('lib', 'kajian', 'adapter', "#{simbol}.json")
       if File.exists?(json_file)
         self.direktori_master ||= JSON(File.read(json_file), symbolize_names: true)
         self.direktori_salinan = direktori_master.dup

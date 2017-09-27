@@ -1,11 +1,13 @@
 # Kajian
 
+[![Gem Version](https://badge.fury.io/rb/kajian.svg)](https://rubygems.org/gems/kajian)
+
 Pustaka ruby untuk mengekstrak data acara kajian Islam dari berbagai situs di
-Indonesia. Dengan menggunakan DSL (Domain Specific Language), mudah untuk
+Indonesia. Dengan menggunakan DSL (_Domain Specific Language_), mudah untuk
 membuat adapter untuk situs-situs lain yang akan diekstrak data acara kajiannya.
 
 Gem ini mengikutsertakan sebuah adapter untuk situs
-[jadwal kajian](http://jadwalkajian.com) dengan simbol adapter `:jadwal_kajian`.
+[Jadwal Kajian](http://jadwalkajian.com) dengan simbol adapter `:jadwal_kajian`.
 
 
 ## Pemasangan
@@ -79,7 +81,7 @@ Kajian.lihat(:semua).bandung
 ## TODO
 
   * Dokumentasi cara membuat adapter kajian dengan menggunakan DSL Kajian
-  * Pencarian isi kolom yang efisien.
+  * Pencarian acara kajian berdasarkan isi kolom (termasuk tanggal) yang efisien.
   * Sortir berdasarkan kolom.
   * Pengecualian adapter.
 
