@@ -6,6 +6,7 @@ module Kajian
     require 'open-uri'
     require 'nokogiri'
     require 'json'
+    require 'thread'
 
     KOLOM = %i[tema penceramah tempat tanggal waktu gambar]
     BULAN = {
@@ -36,35 +37,43 @@ module Kajian
       end
     end
 
-    attr_accessor :simbol, :direktori_master, :direktori_salinan,
-                  *KOLOM.map {|k| "proc_#{k}"}
-    attr_reader   :url, *KOLOM
+    attr_accessor :simbol, *KOLOM.map {|k| "proc_#{k}"}
+    attr_reader   :url, :direktori_master, :direktori_salinan, *KOLOM
     attr_writer   :proc_blok,
 
     def dokumen *daerah_daerah
-      @buang_direktori ||= []
       set_direktori!
-      if daerah_daerah.empty?
-        @buang_direktori.each {|daerah| direktori_salinan.delete(daerah)}
-
-        direktori_salinan.map do |daerah, dir|
-          [daerah, @proc_blok.(daerah)] #rescue [daerah, []]
-        end.to_h
-      else
+      @buang_direktori ||= []
+      @buang_direktori.each {|daerah| direktori_salinan.delete(daerah)}
+      unless daerah_daerah.empty?
         daerah_daerah = daerah_daerah.map(&:to_sym)
-        raise Kajian::KesalahanDaerah, "daerah tidak ditemukan" \
-          if daerah_daerah - direktori_salinan.keys == daerah_daerah
-        pakai_direktori(*daerah_daerah)
-        dokumen
+        daerah_daerah.each do |daerah|
+          raise Kajian::KesalahanDaerah, "daerah '#{daerah}' tidak ditemukan" \
+            unless direktori_salinan.has_key?(daerah)
+        end
+        direktori_salinan.keep_if{|k,_| daerah_daerah.include?(k)}
       end
+
+      jadwal  = []
+      direktori_salinan.to_a.each_slice(10) do |slice|
+        slice.map do |daerah, dir|
+          Thread.new do
+            jadwal << [daerah, @proc_blok.(daerah, dir)] rescue [daerah, []]
+          end
+        end.map(&:join)
+      end
+      jadwal.to_h
+    end
+
+    def json_ke_hash(file_name = "#{simbol}.json")
+      JSON(
+        File.read(File.join(File.dirname(caller[0][/^.*\.rb/]), file_name)),
+        symbolize_names: true
+      )
     end
 
     def set_direktori!
-      json_file = File.join('lib', 'kajian', 'adapter', "#{simbol}.json")
-      if File.exists?(json_file)
-        self.direktori_master ||= JSON(File.read(json_file), symbolize_names: true)
-        self.direktori_salinan = direktori_master.dup
-      end
+      @direktori_salinan = direktori_master.dup
     end
 
     def buang_direktori(*args)
@@ -86,9 +95,9 @@ module Kajian
                 filter_blok
               end
 
-      @proc_blok = proc do |daerah|
+      @proc_blok = proc do |daerah, dir|
         if instance_variable_get("@laman_#{daerah}").nil?
-          laman = Nokogiri::HTML(open(File.join(self.url, self.direktori_salinan[daerah])))
+          laman = Nokogiri::HTML(open(File.join(self.url, dir)))
           instance_variable_set("@laman_#{daerah}", laman)
         end
 
@@ -143,6 +152,7 @@ module Kajian
                    else
                      teks_bersih = bersihkan(teks_awal, filter[:hilangkan], k)
                      teks_sub    = substitusi(teks_bersih, filter[:substitusi])
+                     filter[:parser] ||= Date if k == :tanggal
                      konversi(teks_sub, filter[:parser])
                    end
                  end

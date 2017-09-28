@@ -14,10 +14,10 @@ module Kajian
       koleksi
     end
 
-    def [](daerah)
+    def [](*daerah_daerah)
       koleksi = {}
       @adapter_adapter.map do |adapter|
-        koleksi = koleksi.merge(Kajian::Adapter.new(adapter).public_send(daerah))
+        koleksi = koleksi.merge(Kajian::Adapter.new(adapter)[*daerah_daerah])
       end
       koleksi
     end

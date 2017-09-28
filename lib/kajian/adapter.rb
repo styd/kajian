@@ -18,8 +18,8 @@ module Kajian
       {@simbol_sumber => @kelas_sumber.dokumen}
     end
 
-    def [](daerah)
-      {@simbol_sumber => @kelas_sumber.dokumen(daerah)}
+    def [](*daerah_daerah)
+      {@simbol_sumber => @kelas_sumber.dokumen(*daerah_daerah)}
     end
 
     def method_missing(m)

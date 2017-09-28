@@ -7,6 +7,8 @@ module Kajian
 
       @url = 'http://jadwalkajian.com'
 
+      @direktori_master = json_ke_hash("#{simbol}.json")
+
       # buang_direktori(
       #   :aceh, :bali, :balikpapan, :barabai, :bandung, :banten, :batam, :bojonegoro,
       #   :boyolali, :cilacap, :cilegon, :denpasar, :garut, :gorontalo, :indramayu,
@@ -31,7 +33,7 @@ module Kajian
         end
       end
 
-      tanggal parser: Date do |blok|
+      tanggal do |blok|
         "#{blok.css('span.evcal_cblock .evo_date span.start').first.text.to_i} " +
           "#{blok.css('span.evcal_cblock').first["data-smon"]}"
       end
