@@ -65,7 +65,7 @@ Kajian.lihat(:jadwal_kajian).tangerang
 ```
 
 
-Tambah adapter lain, contoh [Kajian Muslim](https://kajianmuslim.com)
+Tambah adapter lain, contoh [Kajian Muslim](https://github.com/styd/kajian-kajian_muslim)
 
 ```ruby
 require 'kajian/adapter/kajian_muslim'
